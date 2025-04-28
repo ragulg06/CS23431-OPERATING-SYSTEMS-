@@ -1,0 +1,48 @@
+Aim:
+Installation and Configuration of Linux
+To install and configure a Linux operating system in a Virtual Machine.
+
+Installation/Configuration Steps:
+Install the required packages for virtualization
+
+bash
+Copy
+Edit
+dnf install xen virt-manager qemu libvirt
+Configure virt-manager to start on boot
+(Note: You should enable libvirtd or virtqemud service, but based on your instruction)
+
+bash
+Copy
+Edit
+systemctl enable virt-manager.service
+Reboot the machine
+
+bash
+Copy
+Edit
+reboot
+Start Virtual Machine Manager
+
+bash
+Copy
+Edit
+virt-manager &
+In the Virtual Machine Manager window, click on 'File' → 'Add Connection', then connect to 'localhost (QEMU)'
+
+In the base menu, right-click on 'localhost (QEMU)' and select 'Create New Virtual Machine'
+
+Select the installation method as 'Local install media (ISO image or CDROM)'
+
+Browse and choose the Linux ISO image
+(e.g., select puppy-linux.iso)
+
+Choose the appropriate kernel version if asked
+
+Assign CPU and RAM resources
+(Set limits according to your system requirements)
+
+Create a default disk image
+(Allocate around 8 GB for the VM)
+
+Click 'Finish' to create the new Virtual Machine with Puppy Linux installed
