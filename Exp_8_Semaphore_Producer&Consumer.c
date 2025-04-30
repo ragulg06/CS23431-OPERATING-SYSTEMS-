@@ -1,64 +1,73 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <semaphore..h>
-#include <unistd.h>
+#include <semaphore.h>
 
-#define SIZE 5 
+#define SIZE 3 // Buffer size
 
 int buffer[SIZE];
-int in = 0, out = 0, item = 1;
+int in = 0, out = 0, item = 0;
+sem_t empty, full, mutex;
 
-semt_t empty;
-sem_t full;
-sem_t mutex;
-
-void* producer(void* arg){
-    for(int i=0; i<10;i++){
-        sem_wait(&empty);
-        sem_wait(&mutex);
-        buffer[in] = item;
-        printf("Producer Produces item %d at buffer [%d]\n", item, in);
-        in = (int + 1) %SIZE;
-        item++;
-
-        sem_post(&mutex);
-        sem_post(&full);
-        sleep(i);
+// Function to produce an item
+void produce() {
+    if (sem_trywait(&empty) != 0) {
+        printf("Buffer is full!!\n");
+        return;
     }
-    pthread_exit(NULL);
+
+    sem_wait(&mutex);
+    item++;
+    buffer[in] = item;
+    printf("Producer produces the item %d\n", item);
+    in = (in + 1) % SIZE;
+    sem_post(&mutex);
+    sem_post(&full);
 }
 
-void* consumer(void* arg){
-    for(int i=0; i< 10; i++){
-        sem_wait(&full);
-        sem_wait(&mutex);
-
-        int x = buffer[out];
-        printf("Consumer consumes item %d from buffer [%d]\n", x, out);
-        out = (out + 1) % SIZE;
-        sem_post(&mutex);
-        sem_post(&empty);
-        sleep(2);
+// Function to consume an item
+void consume() {
+    if (sem_trywait(&full) != 0) {
+        printf("Buffer is empty!!\n");
+        return;
     }
-    pthread_exit(NULL);
+
+    sem_wait(&mutex);
+    int consumed_item = buffer[out];
+    printf("Consumer consumes item %d\n", consumed_item);
+    out = (out + 1) % SIZE;
+    sem_post(&mutex);
+    sem_post(&empty);
 }
 
-int main(){
-    pthread_t prod_thread, cons_thread;
-    sem_init(&empty, o, SIZE);
-    sem_init(&full, 0, 0);
-    sem_init(&mutex, 0, 1);
+int main() {
+    int choice;
 
-    pthread_create(&prod_thread, NULL, producer, NULL);
-    pthread_create(&cons_thread, NULL, consumer, NULL);
+    // Initialize semaphores
+    sem_init(&empty, 0, SIZE);  // All slots are empty
+    sem_init(&full, 0, 0);      // No filled slots yet
+    sem_init(&mutex, 0, 1);     // Mutex is initially unlocked
 
-    pthread_join(prod_thread, NULL);
-    pthread_join(cons_thread, NULL);
+    while (1) {
+        printf("\n1. Producer\n2. Consumer\n3. Exit\nEnter your choice:");
+        scanf("%d", &choice);
 
-    sem_destroy(&empty);
-    sem_destroy(&full);
-    sem_destroy(&mutex);
+        switch (choice) {
+            case 1:
+                produce();
+                break;
+            case 2:
+                consume();
+                break;
+            case 3:
+                printf("Exiting...\n");
+                sem_destroy(&empty);
+                sem_destroy(&full);
+                sem_destroy(&mutex);
+                exit(0);
+            default:
+                printf("Invalid choice!\n");
+        }
+    }
+
     return 0;
-
 }
